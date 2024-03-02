@@ -20,26 +20,19 @@ namespace BaldiRevertNoise
 		[HarmonyPatch("VirtualLateUpdate")]
 		[HarmonyPatch("VirtualUpdate")]
 		[HarmonyPrefix]
-		static bool NoPropagatedAudio() => false; // Disable magic
+		static bool NoPropagatedAudio(PropagatedAudioManager __instance)
+		{
+			__instance.audioDevice.transform.position = __instance.transform.position;
+			return false;
+		}
 
 		[HarmonyPatch("VirtualAwake")]
-		[HarmonyPrefix]
-		static bool FixAudioForBaldi(PropagatedAudioManager __instance, ref AudioSource ___audioDevice, float ___minDistance, float ___maxDistance)
+		[HarmonyPostfix]
+		static void FullVolume(PropagatedAudioManager __instance, float ___minDistance, float ___maxDistance)
 		{
-			if (___audioDevice != null) return false;
-			var comp = __instance.GetComponent<AudioSource>();
-			if (___audioDevice == null && comp != null)
-			{
-				___audioDevice = comp;
-				return false;
-			}
-			___audioDevice = __instance.gameObject.AddComponent<AudioSource>(); // For some reason, Baldi does not come with a builtin Audio source, so I made this workaround
-			___audioDevice.spatialBlend = 1f;
-			___audioDevice.rolloffMode = AudioRolloffMode.Linear;
-			___audioDevice.minDistance = ___minDistance;
-			___audioDevice.maxDistance = ___maxDistance;
-			___audioDevice.dopplerLevel = 0f;
-			return false;
+			__instance.audioDevice.volume = 100;
+			__instance.audioDevice.minDistance = ___minDistance;
+			__instance.audioDevice.maxDistance = ___maxDistance;
 		}
 
 		[HarmonyPatch("GetSubtitleScale")]
@@ -55,7 +48,7 @@ namespace BaldiRevertNoise
 	{
 		public const string PLUGIN_GUID = "pixelguy.pixelmodding.baldiplus.revertnoise";
 		public const string PLUGIN_NAME = "Baldi\'s 0.3.8 Noise";
-		public const string PLUGIN_VERSION = "1.0.0";
+		public const string PLUGIN_VERSION = "1.0.1";
 	}
 
 
